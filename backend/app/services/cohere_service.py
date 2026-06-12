@@ -35,7 +35,7 @@ class CohereService(BaseLLMService):
         for attempt in range(max_retries):
             try:
                 return self.client.chat_stream(
-                    model="command-r-08-2024",
+                    model="command-a-03-2025",
                     messages=system_and_user_messages,
                     documents=documents
                 )                
@@ -59,7 +59,7 @@ class CohereService(BaseLLMService):
                     documents=documents,
                     top_n=top_n,
                     model=settings.COHERE_RERANK_MODEL,
-                    return_documents=return_documents
+                    #return_documents=return_documents
                 )
             except Exception as e:
                 logger.error(f"Error reranking documents (attempt {attempt + 1}): {e}")
@@ -131,7 +131,7 @@ class CohereService(BaseLLMService):
         for attempt in range(max_retries):
             try:
                 response = self.client.chat(
-                    model="command-r-08-2024",
+                    model="command-a-03-2025",
                     messages=[
                         {
                             'role': system_message.role,
@@ -184,7 +184,7 @@ New query: {message.user_query}"""
         for attempt in range(max_retries):
             try:
                 response = self.client.chat(
-                    model="command-r-08-2024",
+                    model="command-a-03-2025",
                     messages=[
                     {
                         'role': system_message.role,
@@ -240,7 +240,7 @@ New query: {message.user_query}"""
         for attempt in range(max_retries):
             try:
                 response = self.client.chat(
-                    model="command-r",
+                    model="command-a-03-2025",
                     messages=[
                         {
                             'role': system_message.role,
