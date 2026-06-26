@@ -30,6 +30,15 @@ def iso_datetime(value: str) -> str:
     return value
 
 
+def since_query(since: str) -> dict:
+    return {
+        "bool": {
+            "must": [{"range": {"processed": {"gte": since}}}],
+            "must_not": [{"range": {"published": {"lt": since}}}],
+        }
+    }
+
+
 def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Embed documents from Elasticsearch into Qdrant.")
     parser.add_argument(
@@ -78,8 +87,8 @@ def run_estimate_mode(es_client, args: argparse.Namespace) -> None:
     sparse_embedder = get_sparse_embedder()
 
     since = args.since or EPOCH
-    logger.info(f"Estimating documents with processed >= {since}")
-    base_query = {"range": {"processed": {"gte": since}}}
+    logger.info(f"Estimating documents with min(processed, published) >= {since}")
+    base_query = since_query(since)
 
     run_estimate(
         es_client,
@@ -117,8 +126,8 @@ def main(argv=None):
     sparse_embedder = get_sparse_embedder()
 
     if args.since:
-        logger.info(f"Processing documents with processed >= {args.since} (--since)")
-        query = {"query": {"range": {"processed": {"gte": args.since}}}}
+        logger.info(f"Processing documents with min(processed, published) >= {args.since} (--since)")
+        query = {"query": since_query(args.since)}
     else:
         last_run = read_last_run()
         logger.info(f"Processing documents with processed > {last_run}")

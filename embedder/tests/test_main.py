@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.state import EPOCH
-from run import format_progress, main
+from run import format_progress, main, since_query
 
 
 @pytest.fixture
@@ -124,8 +124,18 @@ class TestMain:
         assert sparse_arg is mock_sparse
 
 
+class TestSinceQuery:
+    def test_min_of_processed_and_published(self):
+        assert since_query("2026-01-01T00:00:00") == {
+            "bool": {
+                "must": [{"range": {"processed": {"gte": "2026-01-01T00:00:00"}}}],
+                "must_not": [{"range": {"published": {"lt": "2026-01-01T00:00:00"}}}],
+            }
+        }
+
+
 class TestSinceArgument:
-    def test_since_produces_gte_query_and_skips_state_file(self, patched_main):
+    def test_since_produces_effective_date_query_and_skips_state_file(self, patched_main):
         captured = {}
 
         def fake_batch_generator(es_client, query):
@@ -135,7 +145,7 @@ class TestSinceArgument:
         with patch("run.read_last_run") as mock_read, patch("run.batch_generator", side_effect=fake_batch_generator):
             main(["--since", "2026-01-01T00:00:00"])
 
-        assert captured["query"]["query"]["range"]["processed"]["gte"] == "2026-01-01T00:00:00"
+        assert captured["query"]["query"] == since_query("2026-01-01T00:00:00")
         mock_read.assert_not_called()
 
     def test_invalid_since_exits(self):
@@ -150,13 +160,13 @@ class TestEstimateArgument:
         mock_estimate.assert_called_once()
         mock_process.assert_not_called()
         base_query = mock_estimate.call_args.args[4]
-        assert base_query == {"range": {"processed": {"gte": EPOCH}}}
+        assert base_query == since_query(EPOCH)
 
     def test_estimate_with_since(self, patched_main):
         with patch("run.run_estimate") as mock_estimate, patch("run.process_batch"):
             main(["--estimate", "--since", "2026-01-01T00:00:00"])
         base_query = mock_estimate.call_args.args[4]
-        assert base_query == {"range": {"processed": {"gte": "2026-01-01T00:00:00"}}}
+        assert base_query == since_query("2026-01-01T00:00:00")
 
     def test_estimate_passes_sample_size_and_seed(self, patched_main):
         with patch("run.run_estimate") as mock_estimate, patch("run.process_batch"):
