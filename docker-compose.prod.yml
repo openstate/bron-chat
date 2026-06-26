@@ -123,9 +123,27 @@ services:
     networks:
       - bron-chat
 
+  embedder:
+    build:
+      context: ./embedder
+      dockerfile: Dockerfile
+    profiles:
+      - manual  # excluded from `up`, so it doesn't run on startup
+    env_file:
+      - .env
+    volumes:
+      - embedder_state:/data/embedder_state
+      - embedder_models:/app/embedder/models
+    networks:
+      - bron-chat
+      - jodal_network
+    restart: "no"
+
 volumes:
   letsencrypt:
   traefik: {}
+  embedder_state: {}
+  embedder_models: {}
 
 configs:
   qdrant_config:
@@ -137,3 +155,6 @@ networks:
   nginx-load-balancer:
     external:
       name: docker_nginx-load-balancer
+  jodal_network:
+    external:
+      name: jodal_jodal

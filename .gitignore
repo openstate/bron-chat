@@ -1,7 +1,10 @@
 # Python
+**/.venv/
+**/.pytest_cache/
 __pycache__/
 *.py[cod]
 *$py.class
+.coverage
 
 # Virtual environment
 venv/

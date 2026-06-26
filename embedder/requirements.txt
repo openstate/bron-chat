@@ -1,0 +1,9 @@
+cohere
+fastembed
+tokenizers
+onnxruntime
+qdrant-client
+elasticsearch>=8,<9
+unstructured[html]
+lxml
+tqdm
