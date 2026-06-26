@@ -43,10 +43,21 @@ class TestPrepareQdrantPayload:
         mock_part.assert_called_once()
         assert payloads is not None
 
-    def test_openbesluitvorming_uses_html_txt_partition(self):
-        with patch("app.processing.html_txt_partition", return_value=["Mixed"]) as mock_part:
+    def test_openbesluitvorming_with_md_text_uses_md_partition(self):
+        doc = self._doc("openbesluitvorming", extra={"md_text": "# raadsvoorstel\n\n**veld** waarde"})
+        with patch("app.processing.md_partition", return_value=["MD chunk"]) as mock_md, \
+             patch("app.processing.html_txt_partition") as mock_html_txt:
+            payloads, processed = prepare_qdrant_payload(doc)
+        mock_md.assert_called_once()
+        mock_html_txt.assert_not_called()
+        assert payloads is not None
+
+    def test_openbesluitvorming_without_md_text_falls_back_to_html_txt(self):
+        with patch("app.processing.html_txt_partition", return_value=["Mixed"]) as mock_html_txt, \
+             patch("app.processing.md_partition") as mock_md:
             payloads, processed = prepare_qdrant_payload(self._doc("openbesluitvorming"))
-        mock_part.assert_called_once()
+        mock_html_txt.assert_called_once()
+        mock_md.assert_not_called()
 
     def test_unknown_source_defaults_to_txt(self):
         with patch("app.processing.txt_partition", return_value=["Default"]) as mock_part:

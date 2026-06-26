@@ -7,7 +7,7 @@ from elasticsearch.helpers import scan
 from fastembed import SparseTextEmbedding
 from qdrant_client import QdrantClient
 
-from app.partitioning import html_partition, html_txt_partition, txt_partition
+from app.partitioning import html_partition, html_txt_partition, md_partition, txt_partition
 from app.utils import remove_processing_instructions
 from app.embedding import generate_dense_embeddings, generate_sparse_embedding
 from app.qdrant_handler import filter_new_chunks, make_qdrant_points, upsert_points_to_qdrant
@@ -23,6 +23,7 @@ def prepare_qdrant_payload(doc: dict) -> Tuple[List[dict] | None, str | None]:
 
     try:
         description = doc.get("_source", {}).get("description", "")
+        md_text = doc.get("_source", {}).get("md_text", "")
         processed = doc.get("_source", {}).get("processed", "")
 
         try:
@@ -44,7 +45,9 @@ def prepare_qdrant_payload(doc: dict) -> Tuple[List[dict] | None, str | None]:
 
         markdown_chunks = []
         try:
-            if source in ("cvdr", "poliflw"):
+            if source == "openbesluitvorming" and md_text.strip():
+                markdown_chunks = md_partition(md_text)
+            elif source in ("cvdr", "poliflw"):
                 markdown_chunks = html_partition(description)
             elif source in ("oor", "woogle", "obk"):
                 markdown_chunks = txt_partition(description)

@@ -4,6 +4,6 @@ tokenizers
 onnxruntime
 qdrant-client
 elasticsearch>=8,<9
-unstructured[html]
+unstructured[html,md]
 lxml
 tqdm

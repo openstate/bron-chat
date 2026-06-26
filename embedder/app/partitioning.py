@@ -2,6 +2,7 @@ import logging
 from typing import Callable, List
 from unstructured.partition.html import partition_html
 from unstructured.partition.text import partition_text
+from unstructured.partition.md import partition_md
 from unstructured.cleaners.core import group_broken_paragraphs
 
 from app.utils import composite_to_markdown, custom_clean, is_empty, suppress_stdout_stderr
@@ -40,6 +41,10 @@ def html_partition(doc: str) -> List[str]:
 
 def txt_partition(doc: str) -> List[str]:
     return _partition(partition_text, doc, "TXT")
+
+
+def md_partition(doc: str) -> List[str]:
+    return _partition(partition_md, doc, "MD")
 
 
 def html_txt_partition(doc: str) -> List[str]:

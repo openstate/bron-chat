@@ -9,7 +9,7 @@ from unstructured.documents.elements import (
 )
 
 from app.config import settings
-from app.partitioning import html_partition, html_txt_partition, txt_partition
+from app.partitioning import html_partition, html_txt_partition, md_partition, txt_partition
 from app.utils import composite_to_markdown
 
 PATCH = "app.partitioning.{}"
@@ -73,6 +73,23 @@ class TestTxtPartition:
             stack.enter_context(patch(PATCH.format("suppress_stdout_stderr")))
             stack.enter_context(patch(PATCH.format("partition_text"), side_effect=Exception("fail")))
             result = txt_partition("text")
+        assert result == []
+
+
+class TestMdPartition:
+    def test_returns_chunks_from_elements(self):
+        elements = _make_elements(2)
+        with ExitStack() as stack:
+            _patch_helpers(stack, chunks=["chunk 1", "chunk 2"])
+            stack.enter_context(patch(PATCH.format("partition_md"), return_value=elements))
+            result = md_partition("# heading\n\n**field** value")
+        assert result == ["chunk 1", "chunk 2"]
+
+    def test_exception_returns_empty_list(self):
+        with ExitStack() as stack:
+            stack.enter_context(patch(PATCH.format("suppress_stdout_stderr")))
+            stack.enter_context(patch(PATCH.format("partition_md"), side_effect=Exception("fail")))
+            result = md_partition("# heading")
         assert result == []
 
 
